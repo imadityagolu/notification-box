@@ -1,8 +1,11 @@
 import React from 'react'
+import { Outlet } from 'react-router-dom'
 
 function First() {
   return (
-    <div>First</div>
+    <>
+      <Outlet/>
+    </>
   )
 }
 
