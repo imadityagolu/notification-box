@@ -7,6 +7,10 @@ const messageSchema = mongoose.Schema({
     message:{
         type: String
     },
+    isRead:{
+        type: Boolean,
+        default: false
+    },
     time:{
         type: Date,
         default: Date.now

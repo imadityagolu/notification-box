@@ -1,3 +1,4 @@
+const { io } = require('../index');
 const MessageModel = require('../models/Message.model');
 
 const addMessage = async(req,res) => {
@@ -11,6 +12,9 @@ const addMessage = async(req,res) => {
         }
         const data = new MessageModel({name, message});
         await data.save();
+
+        io.emit('new_message', data);
+
         res.status(200).json({
             alert:"Message Send"
         });
@@ -37,8 +41,22 @@ const showMessage = async(req,res) => {
     }
 }
 
+const markAllAsRead = async(req,res) => {
+    try{
+        await MessageModel.updateMany({ isRead: false }, { isRead: true});
+        res.status(200).json({
+            alert: "Marked all as read"
+        });
+    } catch(error) {
+        res.status(400).json({
+            error: error.message
+        });
+    }
+}
+
 const MessageController = {
     addMessage,
-    showMessage
+    showMessage,
+    markAllAsRead
 }
 module.exports = MessageController;

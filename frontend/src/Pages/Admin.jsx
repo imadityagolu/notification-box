@@ -1,36 +1,56 @@
 import React, { useEffect, useState } from 'react'
+import { io } from 'socket.io-client';
 import { Link } from 'react-router-dom';
 import ProfileImage from '../image/c.jpg';
 import { CgMail } from "react-icons/cg";
-import { CiClock2 } from "react-icons/ci";
 
 function Admin() {
 
   const backend_url = import.meta.env.VITE_BACKEND_URL;
+  const socket = io(import.meta.env.VITE_BACKEND_URL);
 
   const [dropDown, setDropdown] = useState('');
 
   const [toast, setToast] = useState('');
 
   const [message, setMessage] = useState([]);
+  const [unreadMessage, setUnreadMessage] = useState([]);
 
   const fetchMessage = () => {
     fetch(`${backend_url}/api/message/show`)
     .then(res => res.json())
-    .then(data => {setMessage(data.data);})
+    .then(data => {
+      setMessage(data.data);
+      setUnreadMessage(data.data.filter(m => !m.isRead).length);
+    })
     .catch((error) => {setToast(error.message)})
   };
   useEffect(() => {fetchMessage();},[]);
 
+  const markAllAsRead = () => {
+    fetch(`${backend_url}/api/message/markAllAsRead`, {
+      method: 'POST'
+    })
+    .then(() => fetchMessage());
+  }
+
+  useEffect(() => {
+    socket.on('new_message', (data) => {
+      fetchMessage();
+    });
+    return () => {
+      socket.off('new_message');
+    };
+  }, []);
+
+  // to display date & time in indian standard
   function formatDateTime(isoString) {
   const date = new Date(isoString);
-
-  // Get day, month, year
+  // for day, month, year
   const day = date.getDate();
   const month = date.getMonth() + 1; // Months are zero-based
   const year = date.getFullYear();
-
-  // Get hours and minutes
+  // for hours and minutes
   let hours = date.getHours();
   const minutes = date.getMinutes().toString().padStart(2, '0');
   const ampm = hours >= 12 ? 'PM' : 'AM';
@@ -41,6 +61,7 @@ function Admin() {
   
   }
 
+  // to claculate how many time ago message came
   function timeAgo(dateString) {
   const now = new Date();
   const date = new Date(dateString);
@@ -68,14 +89,21 @@ function Admin() {
         <h3>Admin</h3>
       </div>
       <div style={{padding:'6px 20px'}} onClick={() => setDropdown(!dropDown)}>
-        <CgMail style={{baorder:'1px solid #F5F6FA',backgroundColor:'#F5F6FA',borderRadius:'5px',color:'black',padding:'3px',fontSize:'25px'}} />
+        <div style={{baorder:'1px solid #F5F6FA',backgroundColor:'#F5F6FA',borderRadius:'5px',color:'black',padding:'5px 12px',display:'flex'}}>
+          <span><CgMail style={{fontSize:'22px'}} /></span>
+          {unreadMessage > 0 && (
+            <span style={{fontSize:'11px',marginTop:'-3px',padding:'0px 4px',color:'white',position:'absolute',marginLeft:'15px',border:'1px solid red',borderRadius:'50%',backgroundColor:'red'}}>
+              {unreadMessage}
+            </span>
+          )}
+        </div>
       </div>
       {dropDown && (
-        <div style={{position:'fixed',width:'350px',right:'30px',backgroundColor:'white',color:'black',top:'45px',border:'1px solid gray',borderRadius:'5px'}}>
+        <div style={{position:'fixed',width:'350px',right:'35px',backgroundColor:'white',color:'black',top:'45px',border:'1px solid gray',borderRadius:'5px'}}>
           
           <div style={{display:'flex',justifyContent:'space-between',padding:'8px 10px',borderBottom:'1px solid gray'}}>
           <span style={{fontWeight:'700',color:'#092C4C'}}>Notifications</span>
-          <span style={{color:'orange'}}>Mark all as read</span>
+          <span style={{color:'orange',cursor:'pointer'}} onClick={markAllAsRead}>Mark all as read</span>
           </div>
 
           <div style={{height:'200px',overflow:'auto',borderBottom:'1px solid gray',}}>
@@ -89,6 +117,7 @@ function Admin() {
                 <br/>
                 <span style={{fontSize:'12px',fontWeight:'400'}}>{timeAgo(e.time)}</span>
               </div>
+              <div>{e.isRead ? <span style={{color:'orange'}}></span> : <span style={{color:'orange',fontSize:'30px'}}>•</span>}</div>
             </div>
             )}
             {toast && <p>{toast}</p>}
@@ -96,8 +125,8 @@ function Admin() {
           </div>
 
           <div style={{padding:'8px',display:'flex',justifyContent:'space-around'}}>
-            <Link to="/Admin" style={{backgroundColor:'#092C4C',color:'white',padding:'5px 40px',borderRadius:'5px',textDecoration:'none'}}>Cancel</Link>
-            <Link to="/AllMessages" style={{backgroundColor:'orange',color:'white',padding:'5px 40px',borderRadius:'5px',textDecoration:'none'}}>View All</Link>
+            <button onClick={()=>{setDropdown(false)}} style={{backgroundColor:'#092C4C',color:'white',padding:'5px 40px',borderRadius:'5px',textDecoration:'none'}}>Cancel</button>
+            <Link onClick={markAllAsRead} to="/AllMessages" style={{backgroundColor:'orange',color:'white',padding:'5px 40px',borderRadius:'5px',textDecoration:'none'}}>View All</Link>
           </div>
 
         </div>
