@@ -6,15 +6,29 @@ function AllMessages() {
 
     const backend_url = import.meta.env.VITE_BACKEND_URL;
 
-    const[toast, setToast] = useState([]);
+    const[msgtoast, setMsgToast] = useState([]);
 
     const[message, setMessage] = useState([]);
+
+    const[name, setName] = useState('');
+    const[email, setEmail] = useState('');
+  
+    useEffect(() => {
+      const storedName = localStorage.getItem('userName');
+      const storedEmail = localStorage.getItem('userEmail');
+      if (storedName) {
+        setName(storedName);
+      }
+      if (storedEmail) {
+        setEmail(storedEmail);
+      }
+    }, []);
 
     const fetchMessage = () => {
         fetch(`${backend_url}/api/message/show`)
         .then(res => res.json())
         .then(data => {setMessage(data.data);})
-        .catch((error) => {setToast(error.message)});
+        .catch((error) => {setMsgToast(error.message)});
     };
     useEffect(() => {fetchMessage();},[]);
 
@@ -57,6 +71,21 @@ function AllMessages() {
   return `${years} years ago`;
   
   }
+  
+    const [allUsers, setAllUsers] = useState([]);
+
+    // Fetch all users for mapping senderEmail to name
+    useEffect(() => {
+      fetch(`${backend_url}/api/user/list`)
+        .then(res => res.json())
+        .then(data => setAllUsers(Array.isArray(data) ? data : data.users || []));
+    }, [backend_url]);
+  
+  // Helper to get name from email
+  const getNameByEmail = (email) => {
+    const user = allUsers.find(u => u.email === email);
+    return user ? user.name : email;
+  };
 
   return (
     <>
@@ -71,20 +100,20 @@ function AllMessages() {
         {/* all messages */}
         <div style={{marginTop:'15px'}}>
 
-            {Array.isArray(message) && message.map((e) => 
+            {Array.isArray(message) && message.filter(e => e.email === email).map((e) => 
             <div key={e._id} style={{display:'flex',padding:'10px 20px',gap:'10px',border:'1px solid #94979eff',borderRadius:'5px',backgroundColor:'white',marginBottom:'15px'}}>
                 <div>
                     <img src={ProfileImage} style={{width:'50px',borderRadius:'50%'}} />
                 </div>
                 <div>
-                    <span style={{fontWeight:'500'}}>{e.name}</span>
+                    <span style={{fontWeight:'500'}}>{getNameByEmail(e.senderEmail)}</span>
                     <span style={{fontWeight:'400',color:'#86888bff'}}> {e.message}</span>
                     <br/>
                     <div style={{alignItems:'center'}}><CiClock2 /> <span style={{fontSize:'12px',fontWeight:'400'}}>{timeAgo(e.time)}</span></div>
                 </div>
             </div>
             )}
-            {toast && <p>{toast}</p>}
+            {msgtoast && <p>{msgtoast}</p>}
         </div>
     </div>
     </>

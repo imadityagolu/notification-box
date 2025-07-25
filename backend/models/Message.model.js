@@ -1,10 +1,13 @@
 const mongoose = require('mongoose');
 
 const messageSchema = mongoose.Schema({
-    name:{
+    email:{
         type: String
     },
     message:{
+        type: String
+    },
+    senderEmail:{
         type: String
     },
     isRead:{

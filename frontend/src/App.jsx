@@ -6,6 +6,8 @@ import First from './Pages/First';
 import SendMessage from './Pages/SendMessage';
 import Admin from './Pages/Admin';
 import AllMessages from './Pages/AllMessages';
+import Login from './Pages/Login';
+import Signup from './Pages/Signup';
 
 const router = createBrowserRouter([
   {
@@ -14,7 +16,7 @@ const router = createBrowserRouter([
     children: [
       {
         index:true,
-        element:<SendMessage/>
+        element:<Login/>
       },
       {
         path:'/SendMessage',
@@ -27,6 +29,14 @@ const router = createBrowserRouter([
       {
         path:'/AllMessages',
         element:<AllMessages/>
+      },
+      {
+        path:'/Login',
+        element:<Login/>
+      },
+      {
+        path:'/Signup',
+        element:<Signup/>
       }
     ]
   }

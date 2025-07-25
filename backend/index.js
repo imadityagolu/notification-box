@@ -34,5 +34,7 @@ http.listen(PORT,console.log(`server is running - http://localhost:${PORT}`));
 module.exports = { io };
 
 const MessageRoute = require('./routes/Message.route');
+const UserRoute = require('./routes/User.route.js');
 
 app.use("/api/message", MessageRoute);
+app.use("/api/user", UserRoute);
